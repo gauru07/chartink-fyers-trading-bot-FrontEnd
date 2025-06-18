@@ -15,7 +15,7 @@ export default function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:8000/api/chartink-alert", {
+      const res = await axios.post("https://chartink-fyers-trading-bot.onrender.com/api/chartink-alert", {
         alert_id: `A-${Date.now()}`,
         stocks: symbol,
         trigger_prices: parseFloat(price),
@@ -28,10 +28,10 @@ export default function App() {
         risk_reward: parseFloat(rr),
         risk_percent: parseFloat(risk)
       });
-      setStatus(`✅ Order Sent. Qty: ${res.data.qty}, Entry: ₹${res.data.entry}, SL: ₹${res.data.sl}, TP: ₹${res.data.tp}`);
+      setStatus(` Order Sent. Qty: ${res.data.qty}, Entry: ₹${res.data.entry}, SL: ₹${res.data.sl}, TP: ₹${res.data.tp}`);
     } catch (err) {
       console.error(err);
-      setStatus("❌ Error placing order");
+      setStatus(" Error placing order");
     }
   };
 
