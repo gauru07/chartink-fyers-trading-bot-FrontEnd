@@ -28,10 +28,10 @@ export default function App() {
         risk_reward: parseFloat(rr),
         risk_percent: parseFloat(risk)
       });
-      setStatus(` Order Sent. Qty: ${res.data.qty}, Entry: ₹${res.data.entry}, SL: ₹${res.data.sl}, TP: ₹${res.data.tp}`);
+      setStatus(`✅ Order Sent. Qty: ${res.data.qty}, Entry: ₹${res.data.entry}, SL: ₹${res.data.sl}, TP: ₹${res.data.tp}`);
     } catch (err) {
       console.error(err);
-      setStatus(" Error placing order");
+      setStatus("❌ Error placing order");
     }
   };
 
