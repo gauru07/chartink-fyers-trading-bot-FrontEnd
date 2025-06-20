@@ -21,20 +21,19 @@ export default function App() {
     try {
       const res = await axios.post("https://chartink-fyers-trading-bot.onrender.com/api/chartink-alert", {
         alert_id: `A-${Date.now()}`,
-        stocks: symbol,
-        trigger_prices: parseFloat(price),
+        symbol,
+        price: parseFloat(price),
         side,
         timestamp: new Date().toISOString(),
         type: parseInt(type),
-        strategy: "shoot1",
         capital: parseFloat(capital),
         buffer: parseFloat(type === "2" ? bufferInstant : bufferLimit),
         risk_reward: parseFloat(rr),
-        risk_percent: parseFloat(risk),
-        enableInstant,
-        enableLimit,
-        enableLockProfit
+        enable_instant: enableInstant,
+        enable_stoplimit: enableLimit,
+        enable_lockprofit: enableLockProfit
       });
+      
       setStatus(`✅ Order Sent. Qty: ${res.data.qty}, Entry: ₹${res.data.entry}, SL: ₹${res.data.sl}, TP: ₹${res.data.tp}`);
     } catch (err) {
       console.error(err);
