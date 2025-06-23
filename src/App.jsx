@@ -1,128 +1,90 @@
-import { useState } from "react";
-import axios from "axios";
+// ✅ FRONTEND: Updated React component with toggle + conditional UI
+import React, { useState } from 'react';
+import axios from 'axios';
 
-export default function App() {
-  const [symbol, setSymbol] = useState("TATAMOTORS");
-  const [price, setPrice] = useState("800");
-  const [type, setType] = useState("2");
-  const [capital, setCapital] = useState("100000");
-  const [bufferInstant, setBufferInstant] = useState("0.09");
-  const [bufferLimit, setBufferLimit] = useState("0.10");
-  const [rr, setRR] = useState("1.5");
-  const [risk, setRisk] = useState("1.0");
-  const [status, setStatus] = useState("");
-  const [responseJson, setResponseJson] = useState(null);
-  const [enableInstant, setEnableInstant] = useState(true);
-  const [enableLimit, setEnableLimit] = useState(true);
-  const [enableLockProfit, setEnableLockProfit] = useState(false);
-  const [testOnly, setTestOnly] = useState(false); // ✅ NEW toggle
+const TradingDashboard = () => {
+  const [form, setForm] = useState({
+    testLogicOnly: false,
+    stocks: '',
+    trigger_prices: '',
+    type: 'Market',
+    capital: 100000,
+    buffer: 0.09,
+    risk: 0.1,
+    risk_reward: 1.5,
+    lot_size: 1.0,
+    enable_instant: true,
+    enable_stoplimit: true,
+    enable_lockprofit: false
+  });
+
+  const [response, setResponse] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleChange = (e) => {
+    const { name, type, checked, value } = e.target;
+    setForm({
+      ...form,
+      [name]: type === 'checkbox' ? checked : value
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
     try {
-      const usedSymbol = testOnly ? "TATAMOTORS" : symbol;
-      const usedPrice = testOnly ? "800" : price;
-
       const payload = {
-        alert_id: `A-${Date.now()}`,
-        stocks: usedSymbol,
-        trigger_prices: usedPrice,
-        triggered_at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        scan_name: "Manual Test",
-        scan_url: "manual-test",
-        alert_name: "Frontend Test Alert",
-        webhook_url: "https://chartink-fyers-trading-bot.onrender.com/api/chartink-alert",
-        type: parseInt(type),
-        capital: parseFloat(capital),
-        buffer: parseFloat(type === "2" ? bufferInstant : bufferLimit),
-        risk_reward: parseFloat(rr),
-        enable_instant: enableInstant,
-        enable_stoplimit: enableLimit,
-        enable_lockprofit: enableLockProfit
+        ...form,
+        triggered_at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
-
       const res = await axios.post("https://chartink-fyers-trading-bot.onrender.com/api/chartink-alert", payload);
-
-      setStatus(`✅ Order Sent. Qty: ${res.data.qty}, Entry: ₹${res.data.entry}, SL: ₹${res.data.sl}, TP: ₹${res.data.tp}`);
-      setResponseJson(res.data); // ✅ Show full JSON
+      setResponse(res.data);
     } catch (err) {
       console.error(err);
-      setStatus("❌ Error placing order");
-      setResponseJson(err.response?.data || { error: "Unknown error" });
+      setError(err.response?.data || { error: "Unknown error" });
     }
   };
 
+  const isTestMode = form.testLogicOnly;
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white px-4 py-8">
-      <form onSubmit={handleSubmit} className="bg-white text-black p-6 rounded-xl shadow-lg w-full max-w-md mx-auto">
-        <h1 className="text-2xl font-bold text-center mb-1">🚀 Chartink-Fyers Algo Bot</h1>
-        <p className="text-sm text-center text-gray-500 mb-4">Test Market/Limit Logic with SL/TP & Risk</p>
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-4 p-6 bg-white rounded shadow">
+      <label className="block">
+        <input type="checkbox" name="testLogicOnly" checked={form.testLogicOnly} onChange={handleChange} className="mr-2" />
+        <span className="font-medium">Test Logic Only (Use Dummy Symbol & Price)</span>
+      </label>
 
-        <div className="flex items-center gap-2 mb-4">
-          <input type="checkbox" checked={testOnly} onChange={() => setTestOnly(!testOnly)} />
-          <label>Test Logic Only (Use Dummy Symbol & Price)</label>
-        </div>
-
-        <input type="text" placeholder="Stock Symbol (e.g., TATAMOTORS)" className="w-full p-3 mb-3 border rounded"
-          value={symbol} onChange={(e) => setSymbol(e.target.value)} disabled={testOnly} required />
-
-        <input type="number" placeholder="Trigger Price" className="w-full p-3 mb-3 border rounded"
-          value={price} onChange={(e) => setPrice(e.target.value)} disabled={testOnly} required />
-
-        <select className="w-full p-3 mb-3 border rounded" value={type} onChange={(e) => setType(e.target.value)}>
-          <option value="2">Market</option>
-          <option value="1">Limit</option>
-        </select>
-
-        <input type="number" placeholder="Capital (₹)" className="w-full p-3 mb-3 border rounded"
-          value={capital} onChange={(e) => setCapital(e.target.value)} required />
-
-        <input type="number" step="0.01" placeholder="Buffer % (Instant)" className="w-full p-3 mb-3 border rounded"
-          value={bufferInstant} onChange={(e) => setBufferInstant(e.target.value)} />
-
-        <input type="number" step="0.01" placeholder="Buffer % (Limit)" className="w-full p-3 mb-3 border rounded"
-          value={bufferLimit} onChange={(e) => setBufferLimit(e.target.value)} />
-
-        <input type="number" step="0.1" placeholder="Risk-Reward Ratio" className="w-full p-3 mb-3 border rounded"
-          value={rr} onChange={(e) => setRR(e.target.value)} required />
-
-        <input type="number" step="0.1" placeholder="Risk % per Trade" className="w-full p-3 mb-4 border rounded"
-          value={risk} onChange={(e) => setRisk(e.target.value)} required />
-
-        <div className="flex flex-col gap-2 mb-4">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={enableInstant} onChange={() => setEnableInstant(!enableInstant)} />
-            Enable Instant Entry (Market)
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={enableLimit} onChange={() => setEnableLimit(!enableLimit)} />
-            Enable Stop Limit Entry
-          </label>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={enableLockProfit} onChange={() => setEnableLockProfit(!enableLockProfit)} />
-            Enable Lock Profit Logic
-          </label>
-        </div>
-
-        <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 transition">
-          Submit Order
-        </button>
-
-        {status && (
-          <p className={`mt-4 text-center text-sm ${status.includes("Error") ? "text-red-600" : "text-green-600"}`}>
-            {status}
-          </p>
-        )}
-      </form>
-
-      {responseJson && (
-        <div className="bg-gray-800 mt-6 p-4 rounded-xl max-w-3xl mx-auto overflow-auto">
-          <h2 className="text-lg font-semibold text-white mb-2">📋 Full Response</h2>
-          <pre className="text-sm text-green-200 whitespace-pre-wrap">
-            {JSON.stringify(responseJson, null, 2)}
-          </pre>
-        </div>
+      {!isTestMode && (
+        <>
+          <input name="stocks" value={form.stocks} onChange={handleChange} placeholder="Symbol" className="w-full p-2 border rounded" />
+          <input name="trigger_prices" value={form.trigger_prices} onChange={handleChange} placeholder="Price" className="w-full p-2 border rounded" />
+          <select name="type" value={form.type} onChange={handleChange} className="w-full p-2 border rounded">
+            <option value="Market">Market</option>
+            <option value="Limit">Limit</option>
+          </select>
+        </>
       )}
-    </div>
+
+      <input name="capital" value={form.capital} onChange={handleChange} placeholder="Capital" className="w-full p-2 border rounded" />
+      <input name="buffer" value={form.buffer} onChange={handleChange} placeholder="Buffer %" className="w-full p-2 border rounded" />
+      <input name="risk" value={form.risk} onChange={handleChange} placeholder="Risk %" className="w-full p-2 border rounded" />
+      <input name="risk_reward" value={form.risk_reward} onChange={handleChange} placeholder="Risk Reward" className="w-full p-2 border rounded" />
+      <input name="lot_size" value={form.lot_size} onChange={handleChange} placeholder="Lot Size" className="w-full p-2 border rounded" />
+
+      <label><input type="checkbox" name="enable_instant" checked={form.enable_instant} onChange={handleChange} className="mr-2" /> Enable Instant Entry (Market)</label>
+      <label><input type="checkbox" name="enable_stoplimit" checked={form.enable_stoplimit} onChange={handleChange} className="mr-2" /> Enable Stop Limit Entry</label>
+      <label><input type="checkbox" name="enable_lockprofit" checked={form.enable_lockprofit} onChange={handleChange} className="mr-2" /> Enable Lock Profit Logic</label>
+
+      <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Submit Order</button>
+
+      {error && <p className="text-red-500">❌ Error: {error.error}</p>}
+      {response && (
+        <pre className="bg-gray-100 p-2 text-sm rounded border mt-2">
+          {JSON.stringify(response, null, 2)}
+        </pre>
+      )}
+    </form>
   );
-}
+};
+
+export default TradingDashboard;
